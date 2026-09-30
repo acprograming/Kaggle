@@ -61,6 +61,13 @@ PLANT_EXCESS = os.environ.get("V6_PLANT_EXCESS", "0") == "1"
 # keys on the first store to unlock, which assumes the tape recorded under a
 # store also *plays* that store best. TAPE_FORCE lets that be tested.
 TAPE_FORCE = os.environ.get("TAPE_FORCE", "").strip()
+# Drop animal purchases from this day on. An animal bought near the end cannot
+# repay its cost: a cow is 400 and yields once every two days from day 8 of its
+# life. The tape was measured finishing games with ~2 cows and ~3 geese still
+# in the shed, never placed. Unlike deferring a purchase (which desynchronised
+# the tape's pickup/place steps and cost 0.10x), dropping a late one removes
+# spending the schedule has no remaining use for.
+NO_ANIMALS_FROM_DAY = int(os.environ.get("V6_NO_ANIMALS_FROM", "-1"))
 _SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
@@ -187,6 +194,19 @@ def _in_place_work(tile, bag, day, seeds, surplus=None):
                 if structure == kind and bag.get(animal, 0) > 0:
                     return 110.0, ["PLACE", animal, 1]
     return None
+
+
+_inner_market = _tape._market
+
+
+def _market_filtered(obs, action, row, config):
+    orders = _inner_market(obs, action, row, config)
+    if NO_ANIMALS_FROM_DAY >= 0 and obs["day"] >= NO_ANIMALS_FROM_DAY:
+        orders = [o for o in orders if not (o and o[0] == "BUY_ANIMAL")]
+    return orders
+
+
+_tape._market = _market_filtered
 
 
 def _current_row(obs, seat):
