@@ -1,0 +1,5 @@
+=== real_v6_storekeyed : v6.py ===
+matches 100  errors 0  wall 86s  max_call 13ms
+WIN RATE  25/100 = 25.0%
+median margin -11,086 | candidate median 93,008 | opponent median 107,056
+opponent went into debt in 100 matches, finished in debt in 0

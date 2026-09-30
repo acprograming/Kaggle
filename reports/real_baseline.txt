@@ -1,0 +1,5 @@
+=== real_baseline : tape_agent.py ===
+matches 100  errors 0  wall 84s  max_call 22ms
+WIN RATE  24/100 = 24.0%
+median margin -11,308 | candidate median 93,024 | opponent median 107,416
+opponent went into debt in 100 matches, finished in debt in 0

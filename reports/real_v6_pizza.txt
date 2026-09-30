@@ -1,0 +1,5 @@
+=== real_v6_pizza : v6.py ===
+matches 100  errors 0  wall 93s  max_call 13ms
+WIN RATE  22/100 = 22.0%
+median margin -8,189 | candidate median 94,232 | opponent median 105,053
+opponent went into debt in 100 matches, finished in debt in 0

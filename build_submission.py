@@ -60,23 +60,53 @@ def build(agent_path: Path, tape_path: Path, out: Path, config: dict) -> dict:
         r"^_ROOT = .*?\n_spec\.loader\.exec_module\(_tape\)\n", "", agent_src, flags=re.M | re.S)
     # Freeze the tuned configuration; Kaggle has no environment to read.
     for key, value in config.items():
+        if key == "ALLOW" and isinstance(value, list):
+            value = set(value)
         agent_src = re.sub(
             rf'^{key} = .*$', f"{key} = {value!r}", agent_src, count=1, flags=re.M)
+    # Rewire the layer onto the renamed backbone entry point BEFORE stripping
+    # the module prefix, otherwise `_tape.agent(...)` collapses into a
+    # self-recursive `agent(...)`.
+    agent_src = agent_src.replace("_tape.agent(", "_tape_agent(")
     agent_src = agent_src.replace("_tape.", "")
     agent_src = re.sub(r"^\s*$\n(\s*$\n)+", "\n\n", agent_src, flags=re.M)
 
+    # Rename the backbone's entry point so the layer below can own `agent`.
+    tape_src = tape_src.replace("# Independent MMPQ tape candidate. Train80 only. See sibling build manifest.\n", "")
+    if "def agent(obs,configuration=None):" not in tape_src:
+        raise SystemExit("backbone entry point not found; cannot rename safely")
+    tape_src = tape_src.replace("def agent(obs,configuration=None):", "def _tape_agent(obs,configuration=None):")
+    tape_src = tape_src.replace("agent.telemetry=_TELEMETRY", "_tape_agent.telemetry=_TELEMETRY")
+
     parts = [
         HEADER,
-        "# " + "-" * 74 + "\n# Recorded-trajectory backbone (verbatim).\n# " + "-" * 74 + "\n",
-        tape_src.replace('# Independent MMPQ tape candidate. Train80 only. See sibling build manifest.\n', ''),
-        "\n\n_tape_agent = agent\n",
+        "# " + "-" * 74 + "\n# Recorded-trajectory backbone (verbatim, entry point renamed).\n# " + "-" * 74 + "\n",
+        tape_src,
         "\n# " + "-" * 74 + "\n# Idle-command substitution layer.\n# " + "-" * 74 + "\n",
         agent_src,
     ]
+    # Guard against name collisions: the two sources share one namespace once
+    # merged, and a clash silently breaks the backbone (its _TELEMETRY was
+    # shadowed this way). `agent` is the one intended override.
+    def toplevel(src):
+        names = set()
+        for line in src.splitlines():
+            m = re.match(r"(?:def|class)\s+(\w+)", line) or re.match(r"(\w+)\s*(?::[^=]+)?=[^=]", line)
+            if m:
+                names.add(m.group(1))
+        return names
+
+    clash = toplevel(tape_src) & toplevel(agent_src)
+    if clash:
+        raise SystemExit(f"name collision between backbone and agent layer: {sorted(clash)}")
+
     merged = "".join(parts)
     # The substitution layer calls the backbone through this name.
     merged = merged.replace("def agent(obs, configuration=None):\n    action = agent(obs, configuration)",
                             "def agent(obs, configuration=None):\n    action = _tape_agent(obs, configuration)")
+    leftover = [name for name in ("os.environ", "importlib", "_tape.") if name in merged]
+    if leftover:
+        raise SystemExit(f"submission is not self-contained, found: {leftover}")
     out.write_text(merged)
     return {
         "output": str(out),
@@ -101,6 +131,7 @@ def main():
         "FEED_URGENT": False,
         "PLACE_LATE_DAY": -1,
         "PLANT_EXCESS": False,
+        "TAPE_FORCE": "",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     manifest = build(args.agent, args.tape, args.output, config)

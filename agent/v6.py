@@ -61,7 +61,7 @@ PLANT_EXCESS = os.environ.get("V6_PLANT_EXCESS", "0") == "1"
 # keys on the first store to unlock, which assumes the tape recorded under a
 # store also *plays* that store best. TAPE_FORCE lets that be tested.
 TAPE_FORCE = os.environ.get("TAPE_FORCE", "").strip()
-_TELEMETRY = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
+_SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
 def _is_noop(cmd, tile, bag, seeds, day, shed):
@@ -246,13 +246,13 @@ def agent(obs, configuration=None):
         bag = bags[i] if i < len(bags) else {}
         idle = cmd[0] == "PASS"
         if idle:
-            _TELEMETRY["pass_seen"] += 1
+            _SUBST_STATS["pass_seen"] += 1
         else:
             if not REPLACE_NOOPS:
                 continue
             if not _is_noop(cmd, tile, bag, seeds, day, shed):
                 continue
-            _TELEMETRY["noops_seen"] += 1
+            _SUBST_STATS["noops_seen"] += 1
         found = _in_place_work(tile, bag, day, seeds, surplus)
         if not found:
             continue
@@ -266,11 +266,11 @@ def agent(obs, configuration=None):
             surplus[crop] -= 1
             seeds[crop] = max(0, seeds.get(crop, 0) - 1)
         units[i] = replacement
-        _TELEMETRY["pass_used" if idle else "noops_used"] += 1
+        _SUBST_STATS["pass_used" if idle else "noops_used"] += 1
 
     action["farmer"] = units[0] if units else ["PASS"]
     action["hands"] = units[1:]
     return action
 
 
-agent.telemetry = _TELEMETRY
+agent.telemetry = _SUBST_STATS

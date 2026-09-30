@@ -1,13 +1,19 @@
 {
  "output": "/home/user/Kaggle/submission/main.py",
- "bytes": 424258,
- "sha256": "410022a63d7f9023015613cd017ce57231d7eb2783fac159cd23b27c0731989d",
+ "bytes": 424751,
+ "sha256": "76b1c2af6e638fcce28f756cb135d2fd1ac4809d4c0cb8f5e25435bac2680e5a",
  "config": {
   "REPLACE_NOOPS": true,
-  "ALLOW": "{'DIG', 'WATER', 'HARVEST', 'CARE'}",
+  "ALLOW": [
+   "WATER",
+   "HARVEST",
+   "CARE",
+   "DIG"
+  ],
   "FEED_URGENT": false,
   "PLACE_LATE_DAY": -1,
-  "PLANT_EXCESS": false
+  "PLANT_EXCESS": false,
+  "TAPE_FORCE": "PIZZA_SHOP"
  },
  "source_agent": "/home/user/Kaggle/agent/v6.py",
  "source_tape": "/home/user/Kaggle/baseline/tape_agent.py"

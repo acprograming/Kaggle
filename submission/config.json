@@ -1,0 +1,8 @@
+{
+  "REPLACE_NOOPS": true,
+  "ALLOW": ["WATER", "HARVEST", "CARE", "DIG"],
+  "FEED_URGENT": false,
+  "PLACE_LATE_DAY": -1,
+  "PLANT_EXCESS": false,
+  "TAPE_FORCE": "PIZZA_SHOP"
+}
