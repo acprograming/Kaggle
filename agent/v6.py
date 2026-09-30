@@ -68,6 +68,12 @@ TAPE_FORCE = os.environ.get("TAPE_FORCE", "").strip()
 # the tape's pickup/place steps and cost 0.10x), dropping a late one removes
 # spending the schedule has no remaining use for.
 NO_ANIMALS_FROM_DAY = int(os.environ.get("V6_NO_ANIMALS_FROM", "-1"))
+# Normally a movement command is never touched, since the backbone's schedule
+# is positional. This permits one exception: a unit standing on a plant that
+# will become a weed tonight, or an animal that will escape, may water or feed
+# instead of stepping away. That costs one step of schedule slip but saves a
+# tile (or an animal) for the rest of the season.
+RESCUE_ON_MOVE = os.environ.get("V6_RESCUE", "0") == "1"
 _SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
@@ -257,13 +263,28 @@ def agent(obs, configuration=None):
     for i, cmd in enumerate(units):
         if i >= len(positions) or not cmd:
             continue
-        if cmd[0] in MOVES:
+        if cmd[0] in MOVES and not RESCUE_ON_MOVE:
             continue
         x, y = positions[i]
         tile = farm["tiles"][y][x]
         if tile == "LOCKED":
             continue
         bag = bags[i] if i < len(bags) else {}
+        if cmd[0] in MOVES:
+            # Only an outright rescue justifies abandoning a scheduled step.
+            rescue = None
+            if isinstance(tile, dict):
+                if (tile.get("kind") == "PLANT" and not tile.get("watered_today")
+                        and tile.get("consecutive_unwatered", 0) >= 1):
+                    rescue = ["WATER"]
+                elif (tile.get("animal") and not tile.get("fed_today")
+                      and tile.get("consecutive_unfed", 0) >= 1 and bag.get("WHEAT", 0) > 0
+                      and "FEED" in ALLOW):
+                    rescue = ["FEED"]
+            if rescue is not None and rescue[0] in ALLOW:
+                units[i] = rescue
+                _SUBST_STATS["rescues"] = _SUBST_STATS.get("rescues", 0) + 1
+            continue
         idle = cmd[0] == "PASS"
         if idle:
             _SUBST_STATS["pass_seen"] += 1
