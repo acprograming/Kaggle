@@ -1,0 +1,475 @@
+{
+ "summary": {
+  "label": "v4",
+  "agent": "agent/v4.py",
+  "mode": "vs-baseline",
+  "games": 24,
+  "matches": 48,
+  "errors": 0,
+  "cand_mean": 13208.583333333334,
+  "cand_median": 13224.5,
+  "cand_sd": 11291.792695791144,
+  "cand_min": 0.0,
+  "cand_max": 44268.0,
+  "opp_mean": 153864.9375,
+  "opp_median": 154823.0,
+  "head_to_head_wins": 0,
+  "head_to_head_rate": 0.0,
+  "paired_ratio_median": 0.10156073487175032,
+  "paired_ratio_mean": 0.08805565925799318,
+  "max_call_seconds": 0.011221482000109972,
+  "wall_seconds": 58.3595404624939,
+  "estimated_stale_winrate": {
+   "development": {
+    "n": 472,
+    "wins": 10,
+    "win_rate": 0.0211864406779661
+   },
+   "validation": {
+    "n": 156,
+    "wins": 6,
+    "win_rate": 0.038461538461538464
+   },
+   "final_test": {
+    "n": 156,
+    "wins": 6,
+    "win_rate": 0.038461538461538464
+   }
+  }
+ },
+ "games": [
+  {
+   "seed": 1000,
+   "cand_seat0": 13387.0,
+   "opp_seat1": 116998.0,
+   "cand_seat1": 13996.0,
+   "opp_seat0": 124158.0,
+   "shops": [
+    "BRUNCH_SPOT",
+    "PET_CAFE",
+    "BRUNCH_SPOT",
+    "YARN_STORE",
+    "ICE_CREAM_SHOP",
+    "ICE_CREAM_SHOP",
+    "BRUNCH_SPOT",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.0013273740000840917
+  },
+  {
+   "seed": 1001,
+   "cand_seat0": 17388.0,
+   "opp_seat1": 154823.0,
+   "cand_seat1": 17388.0,
+   "opp_seat0": 154823.0,
+   "shops": [
+    "SMOOTHIE_SHOP",
+    "PIZZA_SHOP",
+    "PET_CAFE",
+    "PET_CAFE",
+    "SMOOTHIE_SHOP",
+    "BAKERY",
+    "SMOOTHIE_SHOP",
+    "FARMERS_MARKET"
+   ],
+   "max_call_seconds": 0.0013415989999430167
+  },
+  {
+   "seed": 1002,
+   "cand_seat0": 291.0,
+   "opp_seat1": 200748.0,
+   "cand_seat1": 291.0,
+   "opp_seat0": 200748.0,
+   "shops": [
+    "PIZZA_SHOP",
+    "SMOOTHIE_SHOP",
+    "FARMERS_MARKET",
+    "SMOOTHIE_SHOP",
+    "ICE_CREAM_SHOP",
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT",
+    "FARMERS_MARKET"
+   ],
+   "max_call_seconds": 0.002410459999964587
+  },
+  {
+   "seed": 1003,
+   "cand_seat0": 21209.0,
+   "opp_seat1": 186021.0,
+   "cand_seat1": 21248.0,
+   "opp_seat0": 185322.0,
+   "shops": [
+    "SMOOTHIE_SHOP",
+    "FARMERS_MARKET",
+    "PET_CAFE",
+    "SMOOTHIE_SHOP",
+    "ICE_CREAM_SHOP",
+    "BRUNCH_SPOT",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP"
+   ],
+   "max_call_seconds": 0.0006573109999408189
+  },
+  {
+   "seed": 1004,
+   "cand_seat0": 12414.0,
+   "opp_seat1": 156660.0,
+   "cand_seat1": 14690.0,
+   "opp_seat0": 160036.0,
+   "shops": [
+    "PET_CAFE",
+    "PET_CAFE",
+    "ICE_CREAM_SHOP",
+    "ICE_CREAM_SHOP",
+    "YARN_STORE",
+    "FARMERS_MARKET",
+    "PIZZA_SHOP",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.00276587100006509
+  },
+  {
+   "seed": 1005,
+   "cand_seat0": 267.0,
+   "opp_seat1": 168092.0,
+   "cand_seat1": 6757.0,
+   "opp_seat0": 202068.0,
+   "shops": [
+    "PIZZA_SHOP",
+    "SMOOTHIE_SHOP",
+    "YARN_STORE",
+    "PIZZA_SHOP",
+    "YARN_STORE",
+    "SMOOTHIE_SHOP",
+    "BAKERY",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.003543456999977934
+  },
+  {
+   "seed": 1006,
+   "cand_seat0": 700.0,
+   "opp_seat1": 153925.0,
+   "cand_seat1": 1903.0,
+   "opp_seat0": 169525.0,
+   "shops": [
+    "PIZZA_SHOP",
+    "FARMERS_MARKET",
+    "PET_CAFE",
+    "PIZZA_SHOP",
+    "BAKERY",
+    "YARN_STORE",
+    "PIZZA_SHOP",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.0009615180001674162
+  },
+  {
+   "seed": 1007,
+   "cand_seat0": 6776.0,
+   "opp_seat1": 143145.0,
+   "cand_seat1": 6776.0,
+   "opp_seat0": 143145.0,
+   "shops": [
+    "FARMERS_MARKET",
+    "PET_CAFE",
+    "BRUNCH_SPOT",
+    "PIZZA_SHOP",
+    "SMOOTHIE_SHOP",
+    "PIZZA_SHOP",
+    "PIZZA_SHOP",
+    "BAKERY"
+   ],
+   "max_call_seconds": 0.0015430939999987459
+  },
+  {
+   "seed": 1008,
+   "cand_seat0": 19605.0,
+   "opp_seat1": 127047.0,
+   "cand_seat1": 19586.0,
+   "opp_seat0": 127261.0,
+   "shops": [
+    "BAKERY",
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT",
+    "BRUNCH_SPOT",
+    "BAKERY",
+    "ICE_CREAM_SHOP",
+    "YARN_STORE",
+    "PIZZA_SHOP"
+   ],
+   "max_call_seconds": 0.0006193359999997483
+  },
+  {
+   "seed": 1009,
+   "cand_seat0": 13062.0,
+   "opp_seat1": 103771.0,
+   "cand_seat1": 17482.0,
+   "opp_seat0": 121312.0,
+   "shops": [
+    "BAKERY",
+    "YARN_STORE",
+    "PIZZA_SHOP",
+    "BAKERY",
+    "BRUNCH_SPOT",
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.0008771999998771207
+  },
+  {
+   "seed": 1010,
+   "cand_seat0": 20505.0,
+   "opp_seat1": 157300.0,
+   "cand_seat1": 22293.0,
+   "opp_seat0": 157459.0,
+   "shops": [
+    "BAKERY",
+    "SMOOTHIE_SHOP",
+    "ICE_CREAM_SHOP",
+    "BAKERY",
+    "SMOOTHIE_SHOP",
+    "PET_CAFE",
+    "PIZZA_SHOP",
+    "ICE_CREAM_SHOP"
+   ],
+   "max_call_seconds": 0.001846207999960825
+  },
+  {
+   "seed": 1011,
+   "cand_seat0": 8833.0,
+   "opp_seat1": 90969.0,
+   "cand_seat1": 8138.0,
+   "opp_seat0": 88862.0,
+   "shops": [
+    "BRUNCH_SPOT",
+    "BAKERY",
+    "YARN_STORE",
+    "BAKERY",
+    "BAKERY",
+    "SMOOTHIE_SHOP",
+    "BRUNCH_SPOT",
+    "FARMERS_MARKET"
+   ],
+   "max_call_seconds": 0.002617836000126772
+  },
+  {
+   "seed": 1012,
+   "cand_seat0": 44268.0,
+   "opp_seat1": 187659.0,
+   "cand_seat1": 42755.0,
+   "opp_seat0": 185667.0,
+   "shops": [
+    "YARN_STORE",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP",
+    "PIZZA_SHOP",
+    "FARMERS_MARKET",
+    "BAKERY",
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT"
+   ],
+   "max_call_seconds": 0.002035612000099718
+  },
+  {
+   "seed": 1013,
+   "cand_seat0": 32504.0,
+   "opp_seat1": 145538.0,
+   "cand_seat1": 26958.0,
+   "opp_seat0": 145225.0,
+   "shops": [
+    "YARN_STORE",
+    "BAKERY",
+    "YARN_STORE",
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP",
+    "BAKERY",
+    "YARN_STORE"
+   ],
+   "max_call_seconds": 0.0031904079999094392
+  },
+  {
+   "seed": 1014,
+   "cand_seat0": 166.0,
+   "opp_seat1": 153826.0,
+   "cand_seat1": 145.0,
+   "opp_seat0": 151471.0,
+   "shops": [
+    "FARMERS_MARKET",
+    "PIZZA_SHOP",
+    "BRUNCH_SPOT",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP",
+    "BAKERY",
+    "YARN_STORE",
+    "ICE_CREAM_SHOP"
+   ],
+   "max_call_seconds": 0.00091743600000882
+  },
+  {
+   "seed": 1015,
+   "cand_seat0": 16953.0,
+   "opp_seat1": 157547.0,
+   "cand_seat1": 17576.0,
+   "opp_seat0": 155195.0,
+   "shops": [
+    "PET_CAFE",
+    "ICE_CREAM_SHOP",
+    "BAKERY",
+    "BRUNCH_SPOT",
+    "FARMERS_MARKET",
+    "PIZZA_SHOP",
+    "BAKERY",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.011221482000109972
+  },
+  {
+   "seed": 1016,
+   "cand_seat0": 15749.0,
+   "opp_seat1": 148544.0,
+   "cand_seat1": 19339.0,
+   "opp_seat0": 167061.0,
+   "shops": [
+    "BRUNCH_SPOT",
+    "PET_CAFE",
+    "ICE_CREAM_SHOP",
+    "SMOOTHIE_SHOP",
+    "YARN_STORE",
+    "BRUNCH_SPOT",
+    "BAKERY",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.0002358930000809778
+  },
+  {
+   "seed": 1017,
+   "cand_seat0": 30546.0,
+   "opp_seat1": 137321.0,
+   "cand_seat1": 30546.0,
+   "opp_seat0": 137321.0,
+   "shops": [
+    "YARN_STORE",
+    "YARN_STORE",
+    "ICE_CREAM_SHOP",
+    "YARN_STORE",
+    "YARN_STORE",
+    "BAKERY",
+    "FARMERS_MARKET",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.0007880709999881219
+  },
+  {
+   "seed": 1018,
+   "cand_seat0": 1340.0,
+   "opp_seat1": 156120.0,
+   "cand_seat1": 34.0,
+   "opp_seat0": 153902.0,
+   "shops": [
+    "PIZZA_SHOP",
+    "PIZZA_SHOP",
+    "PET_CAFE",
+    "BAKERY",
+    "ICE_CREAM_SHOP",
+    "SMOOTHIE_SHOP",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP"
+   ],
+   "max_call_seconds": 0.0019233079999594338
+  },
+  {
+   "seed": 1019,
+   "cand_seat0": 0.0,
+   "opp_seat1": 153597.0,
+   "cand_seat1": 0.0,
+   "opp_seat0": 154042.0,
+   "shops": [
+    "FARMERS_MARKET",
+    "BRUNCH_SPOT",
+    "SMOOTHIE_SHOP",
+    "YARN_STORE",
+    "ICE_CREAM_SHOP",
+    "ICE_CREAM_SHOP",
+    "FARMERS_MARKET",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.001218902999880811
+  },
+  {
+   "seed": 1020,
+   "cand_seat0": 806.0,
+   "opp_seat1": 143264.0,
+   "cand_seat1": 806.0,
+   "opp_seat0": 143264.0,
+   "shops": [
+    "ICE_CREAM_SHOP",
+    "BAKERY",
+    "YARN_STORE",
+    "PET_CAFE",
+    "PET_CAFE",
+    "BAKERY",
+    "YARN_STORE",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.0018992459999935818
+  },
+  {
+   "seed": 1021,
+   "cand_seat0": 1760.0,
+   "opp_seat1": 167318.0,
+   "cand_seat1": 1777.0,
+   "opp_seat0": 166692.0,
+   "shops": [
+    "ICE_CREAM_SHOP",
+    "BRUNCH_SPOT",
+    "BRUNCH_SPOT",
+    "ICE_CREAM_SHOP",
+    "PIZZA_SHOP",
+    "ICE_CREAM_SHOP",
+    "ICE_CREAM_SHOP",
+    "PET_CAFE"
+   ],
+   "max_call_seconds": 0.0007082459999310231
+  },
+  {
+   "seed": 1022,
+   "cand_seat0": 20624.0,
+   "opp_seat1": 169958.0,
+   "cand_seat1": 20510.0,
+   "opp_seat0": 169830.0,
+   "shops": [
+    "BRUNCH_SPOT",
+    "SMOOTHIE_SHOP",
+    "FARMERS_MARKET",
+    "PIZZA_SHOP",
+    "BRUNCH_SPOT",
+    "BRUNCH_SPOT",
+    "FARMERS_MARKET",
+    "ICE_CREAM_SHOP"
+   ],
+   "max_call_seconds": 0.0011035210000045481
+  },
+  {
+   "seed": 1023,
+   "cand_seat0": 12367.0,
+   "opp_seat1": 171751.0,
+   "cand_seat1": 11498.0,
+   "opp_seat0": 169186.0,
+   "shops": [
+    "PET_CAFE",
+    "YARN_STORE",
+    "SMOOTHIE_SHOP",
+    "ICE_CREAM_SHOP",
+    "SMOOTHIE_SHOP",
+    "FARMERS_MARKET",
+    "FARMERS_MARKET",
+    "SMOOTHIE_SHOP"
+   ],
+   "max_call_seconds": 0.0016113479998693947
+  }
+ ],
+ "errors": []
+}

@@ -1,0 +1,14 @@
+{
+ "output": "/home/user/Kaggle/submission/main.py",
+ "bytes": 424258,
+ "sha256": "410022a63d7f9023015613cd017ce57231d7eb2783fac159cd23b27c0731989d",
+ "config": {
+  "REPLACE_NOOPS": true,
+  "ALLOW": "{'DIG', 'WATER', 'HARVEST', 'CARE'}",
+  "FEED_URGENT": false,
+  "PLACE_LATE_DAY": -1,
+  "PLANT_EXCESS": false
+ },
+ "source_agent": "/home/user/Kaggle/agent/v6.py",
+ "source_tape": "/home/user/Kaggle/baseline/tape_agent.py"
+}
