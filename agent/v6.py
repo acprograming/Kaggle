@@ -39,6 +39,8 @@ CROP_MAXDAY = {"WHEAT": 4, "CARROT": 3, "MELON": 12, "TOMATO": 8, "STRAWBERRY": 
 CROP_ONGOING = {"WHEAT": False, "CARROT": False, "MELON": False, "TOMATO": True, "STRAWBERRY": True}
 STRUCT_OF = {"GOOSE": "COOP", "COW": "PASTURE", "SHEEP": "PASTURE"}
 MAXHELD = {"GOOSE": 4, "COW": 6, "SHEEP": 6}
+SEED_COST = {"WHEAT": 10, "CARROT": 20, "TOMATO": 50, "STRAWBERRY": 100, "MELON": 80}
+ANIMAL_COST = {"GOOSE": 300, "COW": 400, "SHEEP": 500}
 
 REPLACE_NOOPS = os.environ.get("V6_NOOPS", "1") == "1"
 # Which substitutions are permitted. PLANT and PLACE draw on the shared seed
@@ -80,6 +82,52 @@ RESCUE_ON_MOVE = os.environ.get("V6_RESCUE", "0") == "1"
 # is true of every new planting from the moment it goes in, and the backbone
 # was going to water it later the same day anyway.
 RESCUE_FROM_HOUR = int(os.environ.get("V6_RESCUE_HOUR", "20"))
+
+# --- Melon rush -----------------------------------------------------------
+# Melon is the one product the town barely touches: shops demand none of it and
+# the town centre takes one a day, so its market inventory is almost purely
+# player-driven. Its glut curve is quadratic with T=300, which means the first
+# ~150 melons sold market-wide are worth something and the rest are not. It is
+# therefore a race, not a market.
+#
+# Measured over 40 matches, both sides currently dump melon on day 10 (we sell
+# 30.7 units that day, the opponent 34.2) and both realise ~$201. But our
+# melons reach their capped yield of 6 at age 8, because fertilizing brings the
+# cap forward two days. Harvesting on the day the cap is reached, rather than
+# at the recorded time, puts our stock on the market a day or two ahead of
+# theirs. Selling all 73 of ours before their 70 is worth about +7,900 of
+# margin against the +760 we get from arriving together: we would realise ~$233
+# a unit and leave them ~$130.
+#
+# Harvest lands in the unit's inventory and only reaches the shed at the
+# end-of-day drop, so a day-8 harvest becomes a day-9 sale. That is still
+# ahead of their day 10.
+MELON_RUSH = os.environ.get("V6_MELON_RUSH", "0") == "1"
+MELON_MIN_YIELD = int(os.environ.get("V6_MELON_YIELD", "6"))
+MELON_RUSH_FROM_AGE = int(os.environ.get("V6_MELON_AGE", "8"))
+MELON_RUSH_OVERRIDE_MOVE = os.environ.get("V6_MELON_MOVE", "0") == "1"
+
+# Melon expansion. Winning the race by arriving first is worth ~+7,900 of
+# margin; winning it by volume is worth far more. Selling 150 melons before the
+# opponent's 70 leaves them about $1 a unit, a swing near +25,000. 150 units is
+# 25 tiles at 6 units each, and melon is labour-cheap (watering ages 6-10 plus
+# one harvest) so the cost is seed money and land, not work.
+#
+# The constraint is timing: a melon must be in the ground by about day 1 to cap
+# by day 9, which is exactly when cash is tightest. So extra seeds are bought
+# only out of cash the backbone's own schedule does not need, and planted only
+# on tiles that are empty anyway, using only the surplus above its seed target.
+MELON_EXPAND = int(os.environ.get("V6_MELON_EXPAND", "0"))
+MELON_EXPAND_UNTIL_DAY = int(os.environ.get("V6_MELON_EXPAND_DAY", "1"))
+MELON_CASH_FLOOR = float(os.environ.get("V6_MELON_CASH", "600"))
+# Funding the rush out of "spare" cash bankrupted the opening (score 0): the
+# spare calculation only saw the current turn's orders, while the backbone needs
+# the whole 3,000 across the opening. The honest way to pay for melons is to
+# displace something, and animals are the candidate. Two cows cost 800 and
+# return roughly 6,000 of milk over the season; 10 melons cost the same and, if
+# they reach market before the opponent's, are worth about 8,500 to us and
+# strip ~13,000 from them. That trade is worth making.
+MELON_DISPLACE_ANIMALS = int(os.environ.get("V6_MELON_DISPLACE", "0"))
 _SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
@@ -155,9 +203,11 @@ def _harvestable(tile, day):
     return True if CROP_ONGOING[crop] else age >= CROP_MAXDAY[crop]
 
 
-def _in_place_work(tile, bag, day, seeds, surplus=None):
+def _in_place_work(tile, bag, day, seeds, surplus=None, melon_surplus=None):
     """Best action available without leaving this tile, or None."""
     if tile is None:
+        if melon_surplus and melon_surplus[0] > 0:
+            return 80.0, ["PLANT", "MELON"]
         if surplus:
             for crop in ("CARROT", "WHEAT", "MELON", "TOMATO", "STRAWBERRY"):
                 if surplus.get(crop, 0) > 0:
@@ -215,6 +265,56 @@ def _market_filtered(obs, action, row, config):
     orders = _inner_market(obs, action, row, config)
     if NO_ANIMALS_FROM_DAY >= 0 and obs["day"] >= NO_ANIMALS_FROM_DAY:
         orders = [o for o in orders if not (o and o[0] == "BUY_ANIMAL")]
+    if MELON_DISPLACE_ANIMALS > 0 and obs["day"] <= MELON_DISPLACE_ANIMALS:
+        seat = int(obs.get("player", 0))
+        farm = obs["farms"][seat]
+        freed = 0.0
+        kept = []
+        for order in orders:
+            if order and order[0] == "BUY_ANIMAL":
+                freed += ANIMAL_COST.get(order[1], 0) * int(order[2])
+            else:
+                kept.append(order)
+        if freed > 0:
+            orders = kept
+            private = obs["private"]
+            held = int(private.get("seeds", {}).get("MELON", 0))
+            planted = sum(1 for r in farm["tiles"] for t in r
+                          if isinstance(t, dict) and t.get("crop") == "MELON")
+            room = sum(1 for r in farm["tiles"] for t in r if t is None)
+            want = min(int(freed // SEED_COST["MELON"]),
+                       max(0, MELON_EXPAND - planted - held),
+                       room + 2)
+            if want > 0 and len(orders) < 10:
+                orders.append(["BUY_SEED", "MELON", want])
+    elif MELON_EXPAND > 0 and obs["day"] <= MELON_EXPAND_UNTIL_DAY and len(orders) < 10:
+        seat = int(obs.get("player", 0))
+        farm = obs["farms"][seat]
+        private = obs["private"]
+        held = int(private.get("seeds", {}).get("MELON", 0))
+        planted = sum(1 for r in farm["tiles"] for t in r
+                      if isinstance(t, dict) and t.get("crop") == "MELON")
+        want = MELON_EXPAND - planted - held
+        if want > 0:
+            # Spend only what the backbone's own orders have already left over.
+            spare = float(farm["money"])
+            for order in orders:
+                if not order:
+                    continue
+                if order[0] == "BUY_SEED":
+                    spare -= SEED_COST.get(order[1], 0) * int(order[2])
+                elif order[0] == "BUY_ANIMAL":
+                    spare -= ANIMAL_COST.get(order[1], 0) * int(order[2])
+                elif order[0] == "BUY_PRODUCT":
+                    spare -= obs["market"]["prices"].get(order[1], 0) * int(order[2])
+                elif order[0] == "BUY_LAND":
+                    spare -= 4000
+                elif order[0] == "SELL":
+                    spare += obs["market"]["prices"].get(order[1], 0) * int(order[2])
+            budget = max(0.0, spare - MELON_CASH_FLOOR)
+            qty = min(want, int(budget // SEED_COST["MELON"]))
+            if qty > 0:
+                orders.append(["BUY_SEED", "MELON", qty])
     return orders
 
 
@@ -255,6 +355,19 @@ def agent(obs, configuration=None):
     positions = [tuple(farm["farmer"])] + [tuple(p) for p in farm["hands"]]
     units = [action.get("farmer") or ["PASS"]] + list(action.get("hands") or [])
 
+    # Melon seeds held beyond the backbone's own target for this step are ours
+    # to plant: it never asked for them, so planting them steals nothing.
+    melon_surplus = None
+    if MELON_EXPAND > 0:
+        row = _current_row(obs, seat)
+        target = 0
+        if row is not None:
+            try:
+                target = int(row[3][list(_tape.CROPS).index("MELON")])
+            except (IndexError, TypeError, ValueError):
+                target = 0
+        melon_surplus = [max(0, seeds.get("MELON", 0) - target)]
+
     surplus = None
     if PLANT_EXCESS:
         surplus = dict(seeds)
@@ -269,13 +382,27 @@ def agent(obs, configuration=None):
     for i, cmd in enumerate(units):
         if i >= len(positions) or not cmd:
             continue
-        if cmd[0] in MOVES and not RESCUE_ON_MOVE:
-            continue
         x, y = positions[i]
         tile = farm["tiles"][y][x]
         if tile == "LOCKED":
             continue
         bag = bags[i] if i < len(bags) else {}
+
+        # Melon rush: a capped melon is worth more in the shed today than on
+        # the vine tomorrow, because the melon market is a race. This is rare
+        # enough (a dozen tiles, briefly) that it may pre-empt a scheduled step
+        # without the cascade that sank the general rescue rule.
+        if (MELON_RUSH and isinstance(tile, dict) and tile.get("crop") == "MELON"
+                and tile.get("yield_units", 0) >= MELON_MIN_YIELD
+                and day - tile.get("planted_day", day) >= MELON_RUSH_FROM_AGE
+                and cmd[0] != "HARVEST"):
+            if cmd[0] not in MOVES or MELON_RUSH_OVERRIDE_MOVE:
+                units[i] = ["HARVEST"]
+                _SUBST_STATS["melon_rush"] = _SUBST_STATS.get("melon_rush", 0) + 1
+                continue
+
+        if cmd[0] in MOVES and not RESCUE_ON_MOVE:
+            continue
         if cmd[0] in MOVES:
             # Only an outright rescue, late enough that the backbone will not
             # reach the tile itself, justifies abandoning a scheduled step.
@@ -301,11 +428,20 @@ def agent(obs, configuration=None):
             if not _is_noop(cmd, tile, bag, seeds, day, shed):
                 continue
             _SUBST_STATS["noops_seen"] += 1
-        found = _in_place_work(tile, bag, day, seeds, surplus)
+        found = _in_place_work(tile, bag, day, seeds, surplus, melon_surplus)
         if not found:
             continue
         _value, replacement = found
-        if replacement[0] not in ALLOW:
+        melon_plant = replacement[0] == "PLANT" and replacement[1] == "MELON" and MELON_EXPAND > 0
+        if replacement[0] not in ALLOW and not melon_plant:
+            continue
+        if melon_plant:
+            if not melon_surplus or melon_surplus[0] <= 0:
+                continue
+            melon_surplus[0] -= 1
+            seeds["MELON"] = max(0, seeds.get("MELON", 0) - 1)
+            units[i] = replacement
+            _SUBST_STATS["melon_planted"] = _SUBST_STATS.get("melon_planted", 0) + 1
             continue
         if replacement[0] == "PLANT":
             crop = replacement[1]
