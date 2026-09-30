@@ -74,6 +74,12 @@ NO_ANIMALS_FROM_DAY = int(os.environ.get("V6_NO_ANIMALS_FROM", "-1"))
 # instead of stepping away. That costs one step of schedule slip but saves a
 # tile (or an animal) for the rest of the season.
 RESCUE_ON_MOVE = os.environ.get("V6_RESCUE", "0") == "1"
+# A rescue may only pre-empt a scheduled step this late in the day. Without an
+# hour gate the rule fires constantly and is ruinous (9.6% against 42.9%): a
+# freshly planted seed starts at consecutive_unwatered = 1, so "dies tonight"
+# is true of every new planting from the moment it goes in, and the backbone
+# was going to water it later the same day anyway.
+RESCUE_FROM_HOUR = int(os.environ.get("V6_RESCUE_HOUR", "20"))
 _SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
@@ -271,9 +277,10 @@ def agent(obs, configuration=None):
             continue
         bag = bags[i] if i < len(bags) else {}
         if cmd[0] in MOVES:
-            # Only an outright rescue justifies abandoning a scheduled step.
+            # Only an outright rescue, late enough that the backbone will not
+            # reach the tile itself, justifies abandoning a scheduled step.
             rescue = None
-            if isinstance(tile, dict):
+            if isinstance(tile, dict) and obs["hour"] >= RESCUE_FROM_HOUR:
                 if (tile.get("kind") == "PLANT" and not tile.get("watered_today")
                         and tile.get("consecutive_unwatered", 0) >= 1):
                     rescue = ["WATER"]
