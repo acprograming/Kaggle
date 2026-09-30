@@ -4,3 +4,6 @@ reports/matrix/
 data/
 cache/
 reports/holdout/
+# Per-config sweep artifacts; the summarised results land in reports/experiments.md
+reports/sel_*.json
+reports/late_*.json
