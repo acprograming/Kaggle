@@ -128,6 +128,25 @@ MELON_CASH_FLOOR = float(os.environ.get("V6_MELON_CASH", "600"))
 # they reach market before the opponent's, are worth about 8,500 to us and
 # strip ~13,000 from them. That trade is worth making.
 MELON_DISPLACE_ANIMALS = int(os.environ.get("V6_MELON_DISPLACE", "0"))
+
+# Dump the fertilizer the backbone holds back, rather than spending it on
+# crops. Recorded opponents earn a median 135,010 against a low-volume agent
+# and 97,628 against this one, so the backbone's dumping already suppresses
+# them by ~37,000 a match: selling is an attack, not just income.
+#
+# Fertilizer's glut curve is linear at 0.2 per unit, and the opponents sell 291
+# units a match. So each unit we add to inventory takes ~$58 off their
+# fertilizer revenue, on top of the ~$30 we collect. Using that unit on wheat
+# or carrot instead returns ~$60 of crop yield and denies them nothing. Selling
+# is therefore worth ~$28 more per unit, about +6,800 a match over the ~244
+# the backbone would otherwise apply to crops.
+#
+# Note fertilizing melon gains nothing: it brings the yield cap forward to age
+# 8, but the engine refuses HARVEST before first_yield_day, which is 10.
+#
+# Unlike holding stock back, this only raises cash, so it cannot starve the
+# backbone's purchase schedule the way the earlier market rewrite did.
+DUMP_FERTILIZER = os.environ.get("V6_DUMP_FERT", "0") == "1"
 _SUBST_STATS = {"noops_seen": 0, "noops_used": 0, "pass_seen": 0, "pass_used": 0}
 
 
@@ -263,6 +282,20 @@ _inner_market = _tape._market
 
 def _market_filtered(obs, action, row, config):
     orders = _inner_market(obs, action, row, config)
+    if DUMP_FERTILIZER:
+        held = int(obs["private"].get("shed", {}).get("FERTILIZER", 0))
+        already = sum(int(o[2]) for o in orders
+                      if o and o[0] == "SELL" and o[1] == "FERTILIZER")
+        extra = held - already
+        if extra > 0:
+            merged = False
+            for o in orders:
+                if o and o[0] == "SELL" and o[1] == "FERTILIZER":
+                    o[2] = int(o[2]) + extra
+                    merged = True
+                    break
+            if not merged and len(orders) < 10:
+                orders.append(["SELL", "FERTILIZER", extra])
     if NO_ANIMALS_FROM_DAY >= 0 and obs["day"] >= NO_ANIMALS_FROM_DAY:
         orders = [o for o in orders if not (o and o[0] == "BUY_ANIMAL")]
     if MELON_DISPLACE_ANIMALS > 0 and obs["day"] <= MELON_DISPLACE_ANIMALS:
