@@ -180,3 +180,77 @@ previous result rather than beating it.
 | +20% | 72.7% | 79.5% |
 
 Matches lost by under 3,000 points: 5.5% of development, 5.8% of final test.
+
+
+## Phase 2: margin, not score
+
+Winning means ending with more cash than the opponent, so damage to them counts
+as much as gain to us, and the shared market is a weapon.
+
+### Where the money is, per match (60 matches, development)
+
+| product | ours | theirs | margin | crashable |
+|---|---:|---:|---:|---|
+| WOOL | 11,463 (81u @ $142) | 29,311 (148u @ $198) | -17,848 | yes, collapses after ~59u |
+| WHEAT | 16,688 | 24,507 | -7,819 | no, log curve |
+| FERTILIZER | 12,413 | 14,871 | -2,458 | partly |
+| STRAWBERRY | 23,197 | 23,877 | -680 | yes |
+| EGG | 9,641 | 10,144 | -503 | no, log curve |
+| MILK | 18,238 | 18,436 | -198 | yes |
+| CARROT | 7,548 | 7,018 | +530 | - |
+| MELON | 14,873 | 14,010 | +862 | yes, and almost no town drain |
+| TOMATO | 7,273 | 3,971 | +3,301 | - |
+| TOTAL | 121,334 | 146,147 | -24,813 | |
+
+Wool is where their edge is, but yarn stores drain ~12 a day so crashing it
+needs ~3x our production. Melon is the exception: no shop demands it, so its
+inventory is almost purely player-driven.
+
+### Suppression is already most of the backbone's edge
+
+The most important measurement of the session. Recorded opponents earn a median
+**135,010** against the low-volume from-scratch agent and only **97,628**
+against the backbone. Its constant dumping costs them ~**37,000 a match**.
+
+This explains two earlier results that looked like failures of execution and
+were really failures of objective: reserve-price selling lost 33% because
+holding stock back un-crashes the market *for the opponent*, and a
+"sell smarter, sell less" agent cannot win here regardless of how well it
+trades.
+
+### The melon race
+
+The engine refuses HARVEST before `first_yield_day`, which is 10 for melon, so
+an age-8 harvest is impossible however well fertilized. (Fertilizing melon is
+therefore worthless: it brings the yield cap forward to age 8, which cannot be
+taken.) The race is decided *within* day 10, by the turn.
+
+Planting the starting quadrant with melons nearest the shed -- a melon on a
+shed-access tile is harvested and dropped without a step -- and selling from
+hour 2:
+
+| | units | revenue | first sale |
+|---|---:|---:|---|
+| melon-rush agent | 135 | 21,036 | day 10, hour 2 |
+| backbone | 84 | 8,640 | day 10, hour 6 |
+
++12,400 of margin against the +760 that arriving together yields, on a median
+margin of -1,281. Selling early beats selling more: 24 tiles harvested at age
+10 and sold day 11 is worth -6,251, because by then they have sold.
+
+### Phase 2 rejections, all on the real benchmark
+
+| Approach | Result | Why |
+|---|---:|---|
+| Melon rush on the backbone, no movement | 42.9%, unchanged | Never fires. |
+| Melon rush on the backbone, with movement | 26.9% -> 9.6% | Movement override desynchronises the schedule. |
+| Melon expansion from spare cash | score 0 | Spare was computed per turn; the backbone needs its whole 3,000 across the opening. |
+| Melon expansion displacing animals | 4,500 vs 113,900 | Its pastures, feeding, fertilizer and cash flow all depend on those animals. |
+| From-scratch melon agent (v7) | 0/50, median 44,664 | Midgame far weaker than the backbone; 63% of actions still movement. |
+| Melon opening handed to the backbone at day 11 (v8) | 0.12x | Its commands address tile contents it did not create; nearly all become no-ops. |
+| Dump held-back fertilizer | 42.3% vs 42.9% | Under-counted what the fertilizer bought: it lifts wheat and carrot yields, and those units earn and suppress more than fertilizer suppression gains. The opponent's median *rose* to 98,795. |
+
+The backbone is an all-or-nothing artifact: five independent attempts to
+reallocate its resources or inherit its farm failed. The melon race is a real
++12,400 edge that only an agent owning its own allocation can take, and such an
+agent must also reach ~95k of its own production to be worth running.
