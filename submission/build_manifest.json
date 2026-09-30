@@ -1,7 +1,7 @@
 {
  "output": "/home/user/Kaggle/submission/main.py",
- "bytes": 424751,
- "sha256": "76b1c2af6e638fcce28f756cb135d2fd1ac4809d4c0cb8f5e25435bac2680e5a",
+ "bytes": 425529,
+ "sha256": "83f53f7cee495d6e4a63557d5f40851b78b639cfdf9a95f47e1d8bd67d378116",
  "config": {
   "REPLACE_NOOPS": true,
   "ALLOW": [
@@ -13,7 +13,8 @@
   "FEED_URGENT": false,
   "PLACE_LATE_DAY": -1,
   "PLANT_EXCESS": false,
-  "TAPE_FORCE": "PIZZA_SHOP"
+  "TAPE_FORCE": "",
+  "NO_ANIMALS_FROM_DAY": -1
  },
  "source_agent": "/home/user/Kaggle/agent/v6.py",
  "source_tape": "/home/user/Kaggle/baseline/tape_agent.py"

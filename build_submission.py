@@ -96,9 +96,15 @@ def build(agent_path: Path, tape_path: Path, out: Path, config: dict) -> dict:
                 names.add(m.group(1))
         return names
 
-    clash = toplevel(tape_src) & toplevel(agent_src)
+    # `_market` is rebound on purpose: the layer wraps the backbone's market
+    # head, capturing the original into _inner_market first. Because the layer
+    # is emitted after the backbone, that capture sees the original function.
+    intentional = {"_market"}
+    clash = (toplevel(tape_src) & toplevel(agent_src)) - intentional
     if clash:
         raise SystemExit(f"name collision between backbone and agent layer: {sorted(clash)}")
+    if "_inner_market = _market\n_market" in agent_src.replace("\n\n", "\n"):
+        raise SystemExit("market wrapper would capture itself; check emission order")
 
     merged = "".join(parts)
     # The substitution layer calls the backbone through this name.
