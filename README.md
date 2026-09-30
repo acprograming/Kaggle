@@ -1,139 +1,166 @@
 # Kaggriculture agent: score-optimisation pass
 
-Continuation of the MMPQ cloning work. The earlier project reached **46.8% win
-rate** (73/156) on a sealed pool of recorded opponents. The goal here was to
-push past 50%.
+Continuation of the MMPQ cloning work. The goal was to push the recorded-
+opponent win rate past 50%.
 
-## Conclusion up front
+## Result, stated plainly
 
-The imitation framing was the wrong lever, and the diagnosis is arithmetic:
-MMPQ itself scores a median ~108k, the existing agent already scores ~95k, and
-the prior session measured a 49.2% ceiling on plan-library selection. Cloning
-harder could not cross 50%.
+**That target was not reached, and the change made is not distinguishable from
+noise.** On the benchmark that defines the win rate:
 
-What *does* matter is absolute score, because the win-rate curve is very steep
-at the current operating point. Applying a flat score multiplier to the 784
-recorded matches:
+| Split | Previously shipped agent | This agent |
+|---|---:|---:|
+| development (472 matches) | 181/472 = 38.3% | 186/472 = 39.4% |
+| validation (156 matches) | 66/156 = 42.3% | 67/156 = 42.9% |
+| final test (156 matches) | 72/156 = 46.2% | 73/156 = 46.8% |
 
-| Score multiplier | development | validation | final test |
-|---|---:|---:|---:|
-| 1.00 (shipped agent) | 38.3% | 42.9% | 46.8% |
-| 1.05 | 49.4% | 56.4% | 53.8% |
-| 1.08 | 54.0% | 59.6% | 60.9% |
-| 1.20 | 69.7% | 75.6% | 76.9% |
+Five extra wins on 472 matches is about half a standard deviation. The agent
+matches the previous result rather than beating it.
 
-So **+5-8% score crosses 50%**. That reframed the work from imitation accuracy
-to score.
+What this pass does deliver is a trustworthy measuring instrument, a precise
+size for the remaining gap, and seven dead ends closed with evidence.
 
-## Method
+## How big is the gap
 
-Games are generated from seeds by the official interpreter, so no replay data
-is needed to measure score: a game runs in ~1.5s. Each candidate plays the
-shipped tape agent on the same seeds, in both seats, giving a paired score
-ratio. That ratio is then applied to the 784 recorded opponent scores to
-estimate stale-benchmark win rate. `eval/harness.py` does this.
+Scaling the candidate's score against the recorded opponents, match by match:
 
-This is an estimate, not the real benchmark. Our score in a real match depends
-on the opponent's own market activity (the within-game seat spread averaged
-10,543), so the figure needs confirming against the recorded opponents.
+| Score gain | development | final test |
+|---|---:|---:|
+| +0% (today) | 39.4% | 46.8% |
+| +2% | 44.1% | 51.9% |
+| **+5%** | **50.2%** | 53.8% |
+| +10% | 58.5% | 64.7% |
+| +20% | 72.7% | 79.5% |
 
-## What the measurements said
+**About +5% score is needed to cross 50% honestly.** Development is the largest
+and hardest split; quoting final test alone would suggest +2% and flatter the
+result. Every local lever found here is worth roughly +0.5% together, and only
+5.5% of matches are lost by under 3,000 points, so there is no cluster of
+near-misses to convert cheaply. Closing the gap needs a better production
+policy, not further edits around the recorded trajectory.
 
-Diagnostics on the shipped agent, over live self-play games:
+## The measuring instrument
 
-* **Price realisation is 77-90% of base value**, losing ~35k/game at the low
-  end. Milk realised 59% of base, fertilizer 54%, wool 71%.
-* **Tile utilisation is fine**: 85-88% of unlocked tiles are productive from
-  day 12. An apparent 60-empty-tile end state was an artefact of one-time
-  crops being removed on harvest.
-* **43.2% of unit-actions are movement**, near the floor for tile work (a unit
-  sweeping n adjacent tiles needs n actions plus n-1 steps).
-* **12.2% of unit-actions (925/game) are outright no-ops** and a further
-  247/game are PASS. About 1,170 actions a game do nothing.
-* ~13 animals a game are bought and never placed: roughly 5k of dead capital.
+`bench/` reproduces the benchmark from the recorded games rather than trusting
+a proxy. Two checks say it can be believed:
 
-### Market structure worth knowing
+* Replaying both recorded seats reproduces the original final scores **exactly
+  on 392/392 games**.
+* Running the previously shipped agent through it returns **181/472 = 38.3%**
+  on development, the same figure the earlier session reported, with the
+  opponent entering debt in 151 matches and finishing in debt in 5 on final
+  test, also matching.
 
-Prices move on market inventory, and the town's consumption is what keeps a
-product scarce. So the products the town drains sell *above* base, and the mix
-should follow the shops. Selling 40 units in one order realises 82% of base for
-strawberry and 74% for milk, but 98% for melon.
+The debt protocol is the earlier session's: the recorded opponent's commands
+execute even when they push its cash negative, that debt counts against its
+score, commands that fail for non-cash reasons become no-ops, and every game is
+retained. Only the opponent is credited. The recorded store schedule is forced
+after each transition, because store reveals and weed spawns draw from one RNG
+stream, so a candidate leaving a different number of empty tiles would
+otherwise face a different town than the opponent was recorded against.
 
-The `hinge` products have explosive upside when drained: tomato reaches $300/
-unit at 400 below equilibrium and $900 at 600 below, against a $60 base. Carrot
-reaches $267 and egg $416.
+`eval/harness.py` is the faster seeded live-simulation harness. **Its rankings
+proved unreliable** and it should not be used to choose between candidates; see
+below.
 
-## What worked, and what did not
+## The change that was kept
 
-Each change was measured against the tape backbone on matched seeds.
+The agent follows the recorded MMPQ trajectory, and substitutes CARE for
+commands that provably do nothing in the current game, but only where the unit
+already stands. CARE banks a bonus paid on the animal's next yield, roughly
+doubling a goose's output and tripling a cow's, for one action and no
+resources.
 
-| Change | Paired score ratio |
-|---|---:|
-| Tape backbone (reference) | 1.000 |
-| **Substitute idle commands, in place only** | **1.031-1.044** |
-| Idle substitution with 1-tile detours | 0.883 |
-| Idle substitution with 2-tile detours | 0.893 |
-| Substitution incl. resource-consuming actions | 0.977 |
-| Substitution incl. PLANT and PLACE | 0.805 |
-| Metered, reserve-price selling | 0.671 |
-| Rewritten market head + capital discipline | 0.102 |
-| From-scratch closed-loop optimiser | 0.244 |
+The backbone wastes a lot: 43.2% of unit-actions are movement and a further
+12.2% (925 per game) are no-ops — watering bare earth, caring for an animal
+that is not there — because the recording came from a different game. With 247
+PASS commands, about 1,170 actions a game do nothing.
 
-Three findings explain that table:
+Three constraints govern what may replace them, all measured:
 
-1. **Do not move a unit.** The tape is an open-loop positional schedule. Moving
-   an idle unit makes its route correction fire, which costs more than the work
-   gains. Acting from the tile already occupied is free; detouring is not.
-2. **Do not spend shared resources.** Re-using the tape's seeds, animals, wheat
-   or fertilizer turns its own later commands into no-ops. The permitted
-   substitutions (WATER, HARVEST, CARE, DIG) consume nothing. CARE alone
-   accounts for essentially the whole gain: it banks a bonus paid on the
-   animal's next yield, roughly doubling a goose's output and tripling a cow's,
-   for one action and no resources.
-3. **Do not touch the market head.** Purchases must land on schedule. A
-   reserve-price seller raised unit prices (strawberry $209 vs $147, milk $120
-   vs $78) but cut volume by 250 units for no net revenue, and starved
-   reinvestment. A fuller rewrite left animals unplaced and 72 tiles empty.
+1. **Never move the unit.** The backbone is an open-loop positional schedule.
+   Detours of even one tile score 0.88x, because its route correction costs
+   more than the extra work earns.
+2. **Never spend shared resources.** Re-using its seeds, animals, wheat or
+   fertilizer turns its own later commands into no-ops: -18pp on the real
+   benchmark (24.4% against 42.9%).
+3. **Never touch the market head.** Its purchases must land on schedule.
+   Rewriting it left animals unplaced and 72 tiles empty.
 
-The from-scratch optimiser is retained in `agent/v5.py` with its diagnosis. It
-was abandoned at 0.244 of the backbone: each iteration gained ~0.05, so it
-could not overtake the tape within the time budget. Its ceiling is genuinely
-higher (a static allocation model estimates 126-145k of net revenue against the
-backbone's ~110k realised) and the notes record what a further attempt needs:
-plantings capped by watering capacity, hiring funded before seeds, stable
-target shares, and zone-based routing.
+## What was tried and rejected
+
+All figures from the real benchmark unless marked.
+
+| Approach | Result | Why |
+|---|---:|---|
+| Forced production tape (all 8) | best 42.3% vs 42.9% | The shipped store-keyed rule beats every forced tape. Worst is 20.5%. |
+| Late-animal purchase cutoff | 42.9% at every threshold | No effect. The ~13 unplaced animals per game were a self-play artefact. |
+| Resource-consuming substitutions | 24.4% | Steals from the backbone's exact purchase targets. |
+| Rescue-on-move, ungated | 9.6% | A fresh seed starts at `consecutive_unwatered = 1`, so "dies tonight" is true of every new planting; it hijacked nearly all movement. |
+| Rescue-on-move, hour-gated | 42.9%, unchanged | Never fires. |
+| Reserve-price metered selling | 0.671x score (sim) | Higher unit prices, 250 fewer units sold, no net revenue, and held stock starved reinvestment. |
+| Rewritten market head | 0.102x score (sim) | Desynchronised the backbone's purchase schedule. |
+| From-scratch closed-loop optimiser | 0.244x score (sim) | Abandoned; ~0.05 gain per iteration could not overtake the backbone in budget. Diagnosis in `agent/v5.py`. |
+
+## The live-simulation harness is not a valid selector
+
+Worth recording, because it cost most of a session. `eval/harness.py` scores a
+candidate against the shipped agent on matched seeds. It ranked forcing the
+PIZZA_SHOP tape a clear winner (+7.6% score, an estimated 60.9%) on both tuning
+and held-out seeds. On the real benchmark that configuration is **worse**:
+44.9% against 46.8%.
+
+The cause is structural, not sampling noise. Both players trade into one
+market, so a candidate's own selling moves the opponent's realised prices too.
+Forcing that tape raised our median score on final test (98,740 against 98,124)
+while worsening the median margin (-2,469 against -1,318). **Absolute score and
+score margin are different objectives here**, and a harness that scores against
+a baseline which is itself moving measures the wrong one. SMOOTHIE_SHOP ranked
+first of all nine options in simulation and eighth of nine on the benchmark.
 
 ## Layout
 
 ```
-agent/v6.py             selected agent: backbone + in-place idle substitution
-agent/v5.py             from-scratch optimiser (abandoned, diagnosis in module docstring)
+agent/v6.py             the agent: backbone + in-place CARE substitution
+agent/v5.py             from-scratch optimiser (abandoned; diagnosis in the docstring)
 agent/market_policy.py  reserve-price selling (measured as a net loss; kept for the record)
-baseline/tape_agent.py  the previously shipped agent, used as the paired reference
-eval/harness.py         seeded live-simulation evaluation and win-rate estimation
+baseline/tape_agent.py  the previously shipped agent, used as the reference
+bench/cache_replays.py  streams 392 replays out of their zips into a compact cache
+bench/debt_benchmark.py the recorded-opponent benchmark and its fidelity check
+eval/harness.py         seeded live simulation (fast, but NOT a valid selector)
 sim/                    official interpreter, config and supplied rules
 build_submission.py     inlines the backbone into one standalone Kaggle main.py
-submission/main.py      packaged submission
-reports/                measurement outputs, incl. the prior 784-match results
+submission/main.py      packaged submission (417 KiB, worst turn 4 ms)
+reports/experiments.md  every variant measured, including the ones that lost
 ```
 
 ## Reproduce
 
 ```bash
-python3 eval/harness.py --agent agent/v6.py --seeds 24 --label v6
-python3 build_submission.py
+python3 bench/cache_replays.py                      # needs data/*.zip from Drive
+python3 bench/debt_benchmark.py --verify            # must be 392/392
+python3 bench/debt_benchmark.py --agent agent/v6.py --split final_test
+python3 build_submission.py --config submission/config.json
 ```
 
-`V6_ALLOW`, `V6_FEED_URGENT`, `V6_PLACE_LATE` and `V6_PLANT_EXCESS` select the
-substitution set during development; `build_submission.py` freezes the chosen
-values as literals, since Kaggle has no environment to read.
+`V6_ALLOW`, `V6_RESCUE`, `V6_NO_ANIMALS_FROM` and `TAPE_FORCE` select behaviour
+during development; `build_submission.py` freezes the chosen values as literals,
+since Kaggle has no environment to read, and refuses to emit a file that still
+reads one.
 
-## Open items
+## Where to go next
 
-* The 392-game recorded-opponent benchmark was not re-run: this session's
-  network policy denied `drive.google.com`, so the archives were unreachable,
-  and the Drive MCP tool returns file bytes through the model's context
-  (~10M tokens for one 30 MB archive). The win-rate figures here are therefore
-  estimates from the paired score ratio, not measured match outcomes.
-* `www.kaggle.com` was likewise denied, so the live submission's episodes could
-  not be reviewed.
+The gap is +5% score, and it is in production, not in trading or execution
+around the tape. The closed-loop agent is the honest route, and `agent/v5.py`
+records what a further attempt needs: plantings capped by watering capacity
+(it planted beyond what its workforce could water and lost 36 tiles to weeds by
+day 6), hiring funded before seeds (it spent every dollar on seeds, so it could
+not hire, so it could not water), stable target shares (they thrashed, building
+26 pastures that were never filled), and zone-based routing (68% of its actions
+were movement).
+
+Two facts from the price curves that a production policy should exploit, and
+the current one does not: the products the town drains stay scarce and sell
+*above* base, so the mix should follow `unlocked_shops`; and the `hinge`
+products spike hard when drained — tomato reaches $300/unit at 400 below
+equilibrium and $900 at 600 below, against a $60 base.

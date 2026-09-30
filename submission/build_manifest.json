@@ -1,20 +1,19 @@
 {
  "output": "/home/user/Kaggle/submission/main.py",
- "bytes": 425529,
- "sha256": "83f53f7cee495d6e4a63557d5f40851b78b639cfdf9a95f47e1d8bd67d378116",
+ "bytes": 427204,
+ "sha256": "6cdcf66cfb70da2e95cef4764f9133a530da3e41de83e5846ac007216e1c3ebd",
  "config": {
   "REPLACE_NOOPS": true,
   "ALLOW": [
-   "WATER",
-   "HARVEST",
-   "CARE",
-   "DIG"
+   "CARE"
   ],
   "FEED_URGENT": false,
   "PLACE_LATE_DAY": -1,
   "PLANT_EXCESS": false,
   "TAPE_FORCE": "",
-  "NO_ANIMALS_FROM_DAY": -1
+  "NO_ANIMALS_FROM_DAY": -1,
+  "RESCUE_ON_MOVE": false,
+  "RESCUE_FROM_HOUR": 20
  },
  "source_agent": "/home/user/Kaggle/agent/v6.py",
  "source_tape": "/home/user/Kaggle/baseline/tape_agent.py"

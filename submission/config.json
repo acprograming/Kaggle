@@ -1,9 +1,11 @@
 {
   "REPLACE_NOOPS": true,
-  "ALLOW": ["WATER", "HARVEST", "CARE", "DIG"],
+  "ALLOW": ["CARE"],
   "FEED_URGENT": false,
   "PLACE_LATE_DAY": -1,
   "PLANT_EXCESS": false,
   "TAPE_FORCE": "",
-  "NO_ANIMALS_FROM_DAY": -1
+  "NO_ANIMALS_FROM_DAY": -1,
+  "RESCUE_ON_MOVE": false,
+  "RESCUE_FROM_HOUR": 20
 }

@@ -84,7 +84,7 @@ Market structure, from the official price curves:
   at 400 below equilibrium and $900 at 600 below, against a $60 base; carrot
   $267, egg $416.
 
-## Recorded-opponent benchmark
+## Recorded-opponent benchmark (the authoritative metric)
 
 Fidelity: replaying both recorded seats reproduces the original final scores
 exactly (see `reports/fidelity_full.txt`). This is what licenses the rest.
@@ -99,3 +99,84 @@ face MMPQ itself and the subset is not representative):
 | + substitution, PIZZA_SHOP | 22/100 = 22.0% | -8,189 | 94,232 |
 
 Split results over the full 392-game cache are in `reports/bench_*.json`.
+
+
+## Real-benchmark sweeps (added after Drive access was opened)
+
+All on the recorded games. The live-simulation ranking above is superseded
+wherever the two disagree: it ranks candidates by absolute score against a
+moving baseline, which is not the objective (see README).
+
+### Tape selection, validation split
+
+| Tape rule | Win rate | Median margin |
+|---|---:|---:|
+| store-keyed (shipped rule) | 67/156 = 42.9% | -1,634 |
+| PET_CAFE | 66/156 = 42.3% | -4,604 |
+| PIZZA_SHOP | 65/156 = 41.7% | -2,770 |
+| BAKERY | 53/156 = 34.0% | -10,817 |
+| SMOOTHIE_SHOP | 46/156 = 29.5% | -11,976 |
+| ICE_CREAM_SHOP | 44/156 = 28.2% | -7,067 |
+| BRUNCH_SPOT | 41/156 = 26.3% | -13,906 |
+| FARMERS_MARKET | 33/156 = 21.2% | -23,390 |
+| YARN_STORE | 32/156 = 20.5% | -26,165 |
+
+The shipped rule wins. In live simulation SMOOTHIE_SHOP ranked first of all
+nine and PIZZA_SHOP second; here they are eighth and third.
+
+### Substitution set, validation split
+
+| Allowed | Win rate | Median margin |
+|---|---:|---:|
+| none (backbone only) | 66/156 = 42.3% | -1,820 |
+| **CARE only** | **67/156 = 42.9%** | **-1,430** |
+| WATER + CARE | 67/156 = 42.9% | -1,430 |
+| HARVEST + CARE | 67/156 = 42.9% | -1,508 |
+| WATER/HARVEST/CARE/DIG | 67/156 = 42.9% | -1,634 |
+| + FEED/COLLECT_FERTILIZER/FERTILIZE | 38/156 = 24.4% | -16,336 |
+
+CARE alone is the whole gain and has the best margin, so the selected
+configuration is the simplest one. WATER adds nothing: its row is identical to
+CARE-only to the dollar.
+
+### Late-animal purchase cutoff, validation split
+
+Identical 42.9% at thresholds -1, 26, 24, 21 and 18; median margin moves only
+-1,634 to -1,508. No effect.
+
+### Rescue-on-move, validation split
+
+| Variant | Win rate |
+|---|---:|
+| off | 67/156 = 42.9% |
+| on, ungated | 15/156 = 9.6% |
+| on, ungated, +FEED | 18/156 = 11.5% |
+| on, from hour 20 / 22 / 23 | 67/156 = 42.9% (never fires) |
+
+The ungated collapse is diagnostic: `_new_plant` sets
+`consecutive_unwatered = 1`, so "this plant becomes a weed tonight" is true of
+every planting from the moment it goes in. The rule fired on nearly every fresh
+tile and pre-empted movement the backbone needed.
+
+### Confirmation
+
+| Split | backbone | CARE substitution |
+|---|---:|---:|
+| development (472) | 181/472 = 38.3% | 186/472 = 39.4% |
+| validation (156) | 66/156 = 42.3% | 67/156 = 42.9% |
+| final test (156) | 72/156 = 46.2% | 73/156 = 46.8% |
+
++5 wins on 472 matches is roughly half a standard deviation; this matches the
+previous result rather than beating it.
+
+### Score needed for 50%
+
+| Score gain | development | final test |
+|---|---:|---:|
+| +0% | 39.4% | 46.8% |
+| +2% | 44.1% | 51.9% |
+| +5% | 50.2% | 53.8% |
+| +10% | 58.5% | 64.7% |
+| +20% | 72.7% | 79.5% |
+
+Matches lost by under 3,000 points: 5.5% of development, 5.8% of final test.
