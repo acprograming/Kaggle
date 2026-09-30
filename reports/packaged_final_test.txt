@@ -1,1 +1,6 @@
 split final_test: 78 games in prior manifest, 78 present in cache
+=== packaged_final_test : main.py ===
+matches 156  errors 0  wall 137s  max_call 31ms
+WIN RATE  73/156 = 46.8%
+median margin -1,281 | candidate median 98,314 | opponent median 99,036
+opponent went into debt in 151 matches, finished in debt in 5

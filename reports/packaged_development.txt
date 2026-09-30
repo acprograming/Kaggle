@@ -1,0 +1,6 @@
+split development: 236 games in prior manifest, 236 present in cache
+=== packaged_development : main.py ===
+matches 472  errors 0  wall 409s  max_call 38ms
+WIN RATE  186/472 = 39.4%
+median margin -4,750 | candidate median 93,248 | opponent median 97,119
+opponent went into debt in 440 matches, finished in debt in 9
